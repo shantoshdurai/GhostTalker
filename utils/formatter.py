@@ -54,8 +54,8 @@ def format_audio_list(audio_files, target_language="en", out_path=None, buffer=0
     # Loading Whisper
     device = "cuda" if torch.cuda.is_available() else "cpu" 
 
-    print("Loading Whisper Model!")
-    asr_model = WhisperModel("medium", download_root=FASTERMODEL_DIR,device=device, compute_type="float32")
+    print("Loading Whisper Model (Optimized for 4GB VRAM)!")
+    asr_model = WhisperModel("base", download_root=FASTERMODEL_DIR, device=device, compute_type="float16")
 
     metadata = {"audio_file": [], "text": [], "speaker_name": []}
 
@@ -76,7 +76,7 @@ def format_audio_list(audio_files, target_language="en", out_path=None, buffer=0
             segments, _ = asr_model.transcribe(audio_path, vad_filter=True,
                                                vad_parameters=dict(
                                                    min_silence_duration_ms=500,
-                                                   max_speech_duration_s=10.5), language=target_language,initial_prompt=ZH_PROMPT if target_language=='zh' else None)
+                                                   max_speech_duration_s=10.5), language=target_language,initial_prompt=ZH_PROMPT if target_language=='zh' else None, log_progress=False)
             text = ""
             i = 0
             for segment in segments:
@@ -100,7 +100,7 @@ def format_audio_list(audio_files, target_language="en", out_path=None, buffer=0
                 metadata["speaker_name"].append(speaker_name)
             continue
 
-        segments, _ = asr_model.transcribe(audio_path, word_timestamps=True, language=target_language)
+        segments, _ = asr_model.transcribe(audio_path, word_timestamps=True, language=target_language, log_progress=False)
         segments = list(segments)
         i = 0
         sentence = ""

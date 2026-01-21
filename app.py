@@ -1,3 +1,6 @@
+import os
+os.environ["TORCHAUDIO_BACKEND"] = "soundfile"
+os.environ["TORCH_AUDIO_BACKEND"] = "soundfile"
 import datetime
 import logging
 import queue
@@ -397,14 +400,14 @@ def onoroff():
             except Exception as e:
                 return jsonify({"code":1,"msg":str(e)})
         elif cfg.MYMODEL_OBJS[name] in ['error','no']:
-            return jsonify({"code":0,"msg":"模型启动出错或不存在"})
-        return jsonify({"code":0,"msg":"已启动"})
+            return jsonify({"code":0,"msg":"Model startup error or doesn't exist"})
+        return jsonify({"code":0,"msg":"Launched"})
     else:
         #关闭
         cfg.MYMODEL_OBJS[name]=None
         #删除队列
         cfg.MYMODEL_QUEUE[name]=None
-        return jsonify({"code":0,"msg":"已停止"})
+        return jsonify({"code":0,"msg":"Stopped"})
 
 @app.route('/checkupdate', methods=['GET', 'POST'])
 def checkupdate():

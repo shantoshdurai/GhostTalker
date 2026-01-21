@@ -200,20 +200,19 @@
 
         <div class="  mt-4">
             <div class="">
-                <strong  class="text-primary">填写要处理的txt所在目录完整路径(打开文件夹复制地址栏)</strong>
+                <strong class="text-primary" data-en="Enter the full path of the directory containing the txt files to be processed (copy from the address bar)" data-cn="填写要处理的txt所在目录完整路径(打开文件夹复制地址栏)"></strong>
             </div>
             <div class="">
-                <input id="txt_dir" class="form-control" placeholder="这里填写要批量处理的txt所在目录完整路径" type="text"/>
+                <input id="txt_dir" class="form-control" placeholder-en="Enter the full path of the source directory here" placeholder-cn="这里填写要批量处理的txt所在目录完整路径" type="text"/>
             </div>
         </div>
         <div class=" mt-4">
             <div class=" ">
-                <strong class="text-primary">
-                    填写要保存到的文件夹完整路径(打开文件夹复制地址栏)
+                <strong class="text-primary" data-en="Enter the full path of the destination folder to save files (copy from the address bar)" data-cn="填写要保存到的文件夹完整路径(打开文件夹复制地址栏)">
                 </strong>
             </div>
             <div class="">
-                <input id="txt_out" class="form-control" placeholder="这里填写输出目标文件夹完整路径" type="text"/>
+                <input id="txt_out" class="form-control" placeholder-en="Enter the full output destination folder path here" placeholder-cn="这里填写输出目标文件夹完整路径" type="text"/>
             </div>
         </div>
 
@@ -233,8 +232,8 @@
 <script src="/static/js/layer/layer.js"></script>
 <script src="/static/js/bootstrap.bundle.min.js"></script>
 <script>
-    let language = 'zh';
-    let langlist = {
+    let language = '{{ language }}';
+    let langlist = language === 'zh' ? {
         "lang1": '必须选择要试听的声音',
         "lang2": '录制中',
         "lang3": '停止录制后,可使用此按钮',
@@ -254,6 +253,25 @@
         'lang17': '捐助该项目',
         'lang18': '如果项目对你有帮助，节省了时间和金钱，请考虑小额资助开发者，帮助项目能够长期保持更新和维护。'
 
+    } : {
+        "lang1": 'You must select the voice for audition',
+        "lang2": 'Recording',
+        "lang3": 'Use this button after stopping recording',
+        'lang4': 'Recorded',
+        'lang5': 'Start recording',
+        'lang6': 'Use this button after stopping recording',
+        'lang7': 'Please select a file to upload',
+        'lang8': 'Only SRT subtitle files can be imported',
+        'lang9': 'Please select an SRT file',
+        'lang10': 'You must select a voice to use',
+        'lang11': 'You must enter the text to be synthesized',
+        'lang12': 'You must upload the wav/mp3 audio file for conversion',
+        'lang13': 'The synthesis might take a while, please wait patiently',
+        'lang14': "[text->speech] or [speech->speech] thread not started, hold on",
+        'lang15': 'Converted to wav format: ',
+        'lang16': 'Speed must be between 0.1 and 2.0, 1 is normal speed',
+        'lang17': 'Donate to the project',
+        'lang18': 'If the project is helpful to you, please consider donating.'
     };
     let mediaRecorder;
     let audioChunks = [];
@@ -273,7 +291,7 @@
         $(`[data-${type}]`).each(function () {
             $(this).text($(this).attr(`data-${type}`));
         });
-        $('[placeholderen]').each(function () {
+        $(`[placeholder-${type}]`).each(function () {
             $(this).attr('placeholder', $(this).attr(`placeholder-${type}`));
         });
     }
@@ -466,10 +484,10 @@
         let src = $('#txt_dir').val();
         let dst = $('#txt_out').val();
         if (type == 'tts' && !src) {
-            return layer.alert('必须填写要批量处理的txt所在目录 ', {title: false});
+            return layer.alert(language === 'zh' ? '必须填写要批量处理的txt所在目录 ' : 'Source directory must be filled', {title: false});
         }
         if (type == 'tts' && !dst) {
-            return layer.alert('必须填写目标目录 ', {title: false});
+            return layer.alert(language === 'zh' ? '必须填写目标目录 ' : 'Target directory must be filled', {title: false});
         }
 
         $('#tips').removeClass('d-none').text(langlist['lang13']);
@@ -486,14 +504,14 @@
 				if (res && res['end']) {
 					window.timesec = 0;
 					clearInterval(window.timeid);
-					$('#tips').text("全部执行结束");
-					let msg=res['name']&&res['line']>0?`<p>开始执行文件:${res['name']} , 第${res['line']}行`:''
-					$('#result_text').append(`${msg}<p>全部执行完毕</p>`)
+					$('#tips').text(language === 'zh' ? "全部执行结束" : "Execution finished");
+					let msg=res['name']&&res['line']>0?`<p>${language === 'zh' ? '开始执行文件' : 'Start processing file'}:${res['name']} , ${language === 'zh' ? '第' : 'Line'} ${res['line']} ${language === 'zh' ? '行' : ''}`:''
+					$('#result_text').append(`${msg}<p>${language === 'zh' ? '全部执行完毕' : 'All finished'}</p>`)
 					$(el).removeAttr('disabled')
 				} else {
 					if (res && res['name'] && `${res['name']}-${res['line']}`!=window.lastmsg){
 						window.lastmsg=`${res['name']}-${res['line']}`
-						$('#result_text').append(`<p>开始执行文件:${res['name']} , 第${res['line']}行</p>`);
+						$('#result_text').append(`<p>${language === 'zh' ? '开始执行文件' : 'Start processing file'}:${res['name']} , ${language === 'zh' ? '第' : 'Line'} ${res['line']} ${language === 'zh' ? '行' : ''}</p>`);
 					}
 					console.log('1s后再次执行')
 					setTimeout(fun_res,1000);

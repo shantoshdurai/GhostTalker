@@ -1,3 +1,6 @@
+import os
+os.environ["TORCHAUDIO_BACKEND"] = "soundfile"
+os.environ["TORCH_AUDIO_BACKEND"] = "soundfile"
 import hashlib
 import json
 import os
@@ -61,7 +64,7 @@ def ttsloop():
             obj = cfg.q.get(block=True, timeout=1)
             print(f"[tts][ttsloop]start tts，{obj=}")
             if not os.path.exists(obj['voice']):
-                cfg.global_tts_result[obj['filename']] = f'参考声音不存:{obj["voice"]}'
+                cfg.global_tts_result[obj['filename']] = f'Reference voice not exist:{obj["voice"]}'
                 continue
             try:               
                 tts.tts_to_file(text=obj['text'], speaker_wav=obj['voice'], language=obj['language'], file_path=os.path.join(cfg.TTS_DIR, obj['filename']))
@@ -380,11 +383,11 @@ def load_model(name):
     print(f'{xtts_checkpoint=},{xtts_config=},{xtts_vocab=}')
     if cfg.MYMODEL_OBJS[name]=="no" or not os.path.exists(xtts_checkpoint) or not os.path.exists(xtts_config) or not os.path.exists(xtts_vocab):
         cfg.MYMODEL_OBJS[name]="no"
-        return "自定义模型下不存在 model.pth或config.json/vocab.json 文件!!"
+        return "Model directory is missing model.pth, config.json, or vocab.json!!"
     if cfg.MYMODEL_OBJS[name]=="error":
-        return "模型启动时出错，请重试"
+        return "Error starting model, please try again"
     if cfg.MYMODEL_OBJS[name] and not isinstance(cfg.MYMODEL_OBJS[name],str):
-        return "已启动"
+        return "Launched"
     
     cfg.MYMODEL_OBJS[name]="loading"
     try:
@@ -402,7 +405,7 @@ def load_model(name):
         cfg.MYMODEL_QUEUE[name]=None
         cfg.MYMODEL_OBJS[name]="error"
         return str(e)
-    return "启动成功!"
+    return "Launched successfully!"
 
 def run_tts(name):
     while 1:
@@ -411,10 +414,10 @@ def run_tts(name):
             time.sleep(5)
             continue
         if cfg.MYMODEL_OBJS[name]=='no':
-            print(f"自定义模型 {name} 下不存在model.pth或config.json/vocab.json文件!!")
+            print(f"Custom model {name} directory is missing model.pth, config.json, or vocab.json!!")
             break
         if cfg.MYMODEL_OBJS[name]=='error':
-            print(f"加载自定义模型 {name} 时出错!!")
+            print(f"Error loading custom model {name}!!")
             break
         if cfg.MYMODEL_OBJS[name]=='loading':
             time.sleep(10)
@@ -425,8 +428,22 @@ def run_tts(name):
             time.sleep(1)
             continue
         try:
-            print(f'{obj=}')
             lang, tts_text, speaker_audio_file=obj['language'],obj['text'],os.path.join(cfg.MYMODEL_DIR,name,'base.wav')
+            
+            # Optimization: Use only the first 10 seconds of source audio for faster generation
+            # This solves the "whole audio playing" issue and speeds up the process significantly
+            try:
+                temp_audio = AudioSegment.from_wav(speaker_audio_file)
+                if len(temp_audio) > 10000: # If longer than 10s
+                    temp_audio = temp_audio[:10000] # Cut to first 10s
+                    # Save cut version to temp
+                    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tf:
+                        temp_path = tf.name
+                    temp_audio.export(temp_path, format="wav")
+                    speaker_audio_file = temp_path
+            except Exception as sub_e:
+                print(f"Audio cutting warning: {sub_e}, using full audio")
+
             gpt_cond_latent, speaker_embedding = cfg.MYMODEL_OBJS[name].get_conditioning_latents(audio_path=speaker_audio_file, gpt_cond_len=cfg.MYMODEL_OBJS[name].config.gpt_cond_len, max_ref_length=cfg.MYMODEL_OBJS[name].config.max_ref_len, sound_norm_refs=cfg.MYMODEL_OBJS[name].config.sound_norm_refs)
             out = cfg.MYMODEL_OBJS[name].inference(
                 text=tts_text,

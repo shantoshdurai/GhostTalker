@@ -237,7 +237,7 @@ def detail_task(*pams):
             continue
         concat_txt=os.path.join(cfg.TTS_DIR, re.sub(r'[ \s\[\]\{\}\(\)<>\?\, :]+','', t, re.I) + '.txt')
         
-        app.logger.info(f'####开始处理文件：{t}, 每行结果保存在:{concat_txt}')
+        app.logger.info(f'#### Starting to process file: {t}, results per line saved in: {concat_txt}')
         with open(concat_txt,'w',encoding='utf-8') as f:
             f.write("")
         #需要等待执行完毕的数据 [{}, {}]
@@ -250,24 +250,24 @@ def detail_task(*pams):
                 num+=1
                 line=line.strip()
                 if re.match(r'^[~`!@#$%^&*()_+=,./;\':\[\]{}<>?\\|"，。？；‘：“”’｛【】｝！·￥、\s\n\r -]*$', line):
-                    app.logger.info(f'\t第{num}不存在有效文字，跳过')
+                    app.logger.info(f'\tLine {num} has no valid text, skipping')
                     continue                
                 md5_hash = hashlib.md5()
                 md5_hash.update(f"{line}-{voice}-{language}-{speed}".encode('utf-8'))
                 filename = md5_hash.hexdigest() + ".wav"
-                app.logger.info(f'\t开始合成第{num}行声音:{filename=}')
+                app.logger.info(f'\tStarting synthesis for line {num} audio: {filename=}')
                 # 合成语音
                 rs = create_tts(text=line, speed=speed, voice=voice, language=language, filename=filename)
                 # 已有结果或错误，直接返回
                 if rs is not None and rs['code']==1:
-                    app.logger.error(f'\t{t}:文件内容第{num}行【 {line} 】出错了，跳过')
+                    app.logger.error(f'\t{t}:Error in file content line {num} [ {line} ], skipping')
                     continue
                 if rs is not None and rs['code']==0:
                     #已存在直接使用
                     result[f'{num}']={"filename":filename, "num":num}
                     chuliing['name']=t
                     chuliing['line']=num
-                    app.logger.info(f'\t第{num}行合成完毕:{filename=}')
+                    app.logger.info(f'\tLine {num} synthesis complete: {filename=}')
                     continue
                 waitlist.append({"filename":filename, "num":num, "t":t})
         
@@ -287,12 +287,12 @@ def detail_task(*pams):
                 # 当前行已完成合成
                 if filename in cfg.global_tts_result and cfg.global_tts_result[filename] != 1:
                     #出错了
-                    app.logger.error(f'\t{t}:文件内容第{num}行出错了,{cfg.global_tts_result[filename]}, 跳过')
+                    app.logger.error(f'\t{t}:Error in file content line {num}, {cfg.global_tts_result[filename]}, skipping')
                     continue
                 if os.path.exists(os.path.join(cfg.TTS_DIR, filename)):
                     chuliing['name']=t
                     chuliing['line']=num
-                    app.logger.info(f'\t第{num}行合成完毕:{filename}')
+                    app.logger.info(f'\tLine {num} synthesis complete: {filename}')
                     #成功了
                     result[f'{num}']={"filename":filename, "num":num}
                     continue
@@ -301,7 +301,7 @@ def detail_task(*pams):
                 time_tmp+=1
                 time.sleep(1)
         if len(result.keys())<1:
-            app.logger.error(f'\t该文件合成失败，没有生成任何声音')
+            app.logger.error(f'\tSynthesis failed for this file, no audio generated')
             continue    
         sorted_result = {k: result[k] for k in sorted(result, key=lambda x: int(x))}
         for i, it in sorted_result.items():
@@ -314,18 +314,18 @@ def detail_task(*pams):
         p=subprocess.run(['ffmpeg',"-hide_banner", "-ignore_unknown", '-y', '-f', 'concat', '-safe', '0', '-i', concat_txt, target_mp3])
         
         if p.returncode!=0:
-            app.logger.error(f'\t处理文件:{t},将所有音频连接一起时出错')
+            app.logger.error(f'\tError processing file: {t}, failed to concatenate all audio')
             continue
-        app.logger.info(f'\t已生成完整音频:{target_mp3}')
+        app.logger.info(f'\tFull audio generated: {target_mp3}')
         if speed != 1.0 and speed > 0 and speed <= 2.0:
             p= subprocess.run(['ffmpeg', '-hide_banner', '-ignore_unknown', '-y', '-i', target_mp3, '-af', f"atempo={speed}",f'{target_mp3}-speed{speed}.mp3'], encoding="utf-8", capture_output=True)
             if p.returncode != 0:
-                app.logger.error(f'\t处理文件{t}:将{target_mp3}音频改变速度{speed}倍时失败')
+                app.logger.error(f'\tError processing file {t}: failed to change {target_mp3} audio speed to {speed}x')
                 continue
             os.unlink(target_mp3)
             target_mp3=f'{target_mp3}-speed{speed}.mp3'
-        app.logger.info(f'\t文件:{t} 处理完成，mp3:{target_mp3}')
-    app.logger.info('所有文件处理完毕')
+        app.logger.info(f'\tFile: {t} processing complete, mp3: {target_mp3}')
+    app.logger.info('All files processed complete')
     chuliing['end']=True    
 
 @app.route('/ttslist',methods=['GET', 'POST'])
@@ -345,7 +345,7 @@ def ttslist():
     src=os.path.normpath(src)
     print(f'{src=},{dst=},{language=},{speed=},{voice=}')
     if not src or not dst or not os.path.exists(src) or not os.path.exists(dst):
-        return jsonify({"code":1,"msg":"必须正确填写txt所在目录以及目标目录的完整路径"})
+        return jsonify({"code":1,"msg":"The full path of the source txt directory and the target directory must be filled in correctly"})
 
     threading.Thread(target=detail_task, args=(voice, src, dst, speed, language)).start()    
 

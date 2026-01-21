@@ -1,5 +1,21 @@
 import argparse
 import os
+os.environ["TORCHAUDIO_BACKEND"] = "soundfile"
+os.environ["TORCH_AUDIO_BACKEND"] = "soundfile"
+
+# Add Torch libraries to DLL search path for ctranslate2/faster-whisper
+import torch
+try:
+    if os.name == 'nt':
+        lib_path = os.path.join(os.path.dirname(torch.__file__), 'lib')
+        os.environ['PATH'] = lib_path + os.pathsep + os.environ['PATH']
+        try:
+            os.add_dll_directory(lib_path)
+        except AttributeError:
+            pass
+except Exception:
+    pass
+
 import sys
 import tempfile
 import threading
@@ -147,16 +163,16 @@ if __name__ == "__main__":
 
     with gr.Blocks(css="ul.options[role='listbox']{background:#ffffff}",title="clone-voice trainer") as demo:
         if not proxy:
-            gr.Markdown("""**没有配置代理，训练中可能出错，建议在.env文件中 `HTTP_PROXY=`后填写代理地址**""")
-        with gr.Tab("训练平台"):
+            gr.Markdown("""**Proxy not configured, errors may occur during training. It is recommended to set the proxy address after HTTP_PROXY= in the .env file.**""")
+        with gr.Tab("Training Platform"):
             with gr.Row() as r1:
                 model_name= gr.Textbox(
-                        label="训练后模型名称(限英文/数字/下划线，禁止空格或特殊符号):",
+                        label="Trained model name (English/numbers/underscores only, no spaces or special characters):",
                         value=f"model{date.day}{date.hour}{date.minute}",
                 )
                 lang = gr.Dropdown(
-                    label="音频发声语言",
-                    value="zh",
+                    label="Audio Voice Language",
+                    value="en",
                     choices=[
                         "zh",
                         "en",
@@ -179,60 +195,60 @@ if __name__ == "__main__":
             with gr.Row() as r1:
                 upload_file = gr.File(
                     file_count="multiple",
-                    label="选择训练素材音频文件(可多个)，仅可包含同一个人声，并且无背景噪声(wav, mp3, and flac)",
+                    label="Select training material audio files (multiple allowed), must only contain the same person's voice, and no background noise (wav, mp3, and flac)",
                 )
                 logs = gr.Textbox(
-                    label="日志:",
+                    label="Logs:",
                     interactive=False,
                 )
                 demo.load(read_logs, None, logs, every=1)
 
-            prompt_compute_btn = gr.Button(value="第一步：上传音频文件后点击开始整理数据")
+            prompt_compute_btn = gr.Button(value="Step 1: Click to start organizing data after uploading audio files")
             with gr.Row() as r1:
                 train_data = gr.Textbox(
-                    label="待训练数据集/可修改识别出的文字以便效果更好:",
+                    label="Training dataset / transcripts (you can edit identified text for better results):",
                     interactive=True,
                     lines=20,
-                    placeholder="第一步结束后，会自动在此显示整理好的文字，可修改错别字，以便取得更好效果"
+                    placeholder="After Step 1, the organized text will appear here. You can fix typos to get better results."
                 )
                 eval_data = gr.Textbox(
-                    label="验证数据集/可修改识别出的文字以便效果概念股或:",
+                    label="Validation dataset / transcripts:",
                     interactive=True,
                     lines=20,
-                    placeholder="第一步结束后，会自动在此显示整理好的文字，可修改错别字，以便取得更好效果"
+                    placeholder="After Step 1, the organized text will appear here. You can fix typos to get better results."
                 )
             with gr.Row() as r:
                 train_file=gr.Textbox(
-                    label="待训练数据集csv文件:",
+                    label="Training dataset csv file:",
                     interactive=False,
                     visible=False
                     
                 )
                 eval_file=gr.Textbox(
-                    label="验证数据集csv文件:",
+                    label="Validation dataset csv file:",
                     interactive=False,
                     visible=False
                 )
             
-            start_train_btn = gr.Button(value="第二步：修改错别字后(或不修改)，点击启动训练")
+            start_train_btn = gr.Button(value="Step 2: After fixing typos (or not), click to start training")
             
             with gr.Row():
                 with gr.Column() as col1:
                     xtts_checkpoint = gr.Textbox(
-                        label="训练后模型保存路径:",
+                        label="Model save path:",
                         value="",
                         interactive=False,
                         visible=False
                     )
                     xtts_config = gr.Textbox(
-                        label="训练后模型配置文件:",
+                        label="Model config file:",
                         value="",
                         interactive=False,
                         visible=False
                     )
 
                     xtts_vocab = gr.Textbox(
-                        label="vocab文件:",
+                        label="Vocab file:",
                         value="",
                         interactive=False,
                         visible=False
@@ -241,13 +257,13 @@ if __name__ == "__main__":
             with gr.Row():
                 with gr.Column() as col2:
                     speaker_reference_audio = gr.Textbox(
-                        label="参考音频/第二步结束后自动填充:",
+                        label="Reference audio / Auto-filled after Step 2:",
                         value="",
-                        placeholder=f"第二步结束后可以到{os.path.join(args['out_path'], dataset_name,'wavs')}目录下，找到质量更好音频替换"
+                        placeholder=f"After Step 2, you can find better quality audio in the folder {os.path.join(args['out_path'], dataset_name,'wavs')} to replace it."
                     )
                     tts_language = gr.Dropdown(
-                        label="文字语言",
-                        value="zh",
+                        label="Text Language",
+                        value="en",
                         choices=[
                             "zh",
                             "en",
@@ -268,24 +284,24 @@ if __name__ == "__main__":
                         ]
                     )
                     tts_text = gr.Textbox(
-                        label="输入要合成的文字.",
-                        value="你好啊，我亲爱的朋友.",
+                        label="Enter text to synthesize.",
+                        value="Hello, my dear friend.",
                     )                   
 
                 with gr.Column() as col3:
-                    tts_output_audio = gr.Audio(label="生成的声音.")
-                    reference_audio = gr.Audio(label="作为参考的音频.")
-            tts_btn = gr.Button(value="第三步：自动填充参考音频后，点击测试模型效果")
+                    tts_output_audio = gr.Audio(label="Generated Voice.")
+                    reference_audio = gr.Audio(label="Reference Audio.")
+            tts_btn = gr.Button(value="Step 3: Test model effect after reference audio is auto-filled")
             copy_label=gr.Label(label="")
-            move_btn = gr.Button(value="第四步：效果如果满意，点击复制到clone-voice中使用它")
+            move_btn = gr.Button(value="Step 4: If satisfied, click to copy to clone-voice for usage")
             
             
 
             def train_model(language, train_text, eval_text,trainfile,evalfile):
                 clear_gpu_cache()
                 if not trainfile or not evalfile:
-                    gr.Error("请等待数据处理完毕，目前不存在有效的训练数据集!")
-                    return "请等待数据处理完毕，目前不存在有效的训练数据集!","", "", "", ""
+                    gr.Error("Please wait for data processing to complete, no valid training dataset exists yet!")
+                    return "Please wait for data processing to complete, no valid training dataset exists yet!","", "", "", ""
                 try:
                     with open(trainfile,'w',encoding='utf-8') as f:
                         f.write(train_text.replace('\r\n','\n'))
@@ -302,15 +318,15 @@ if __name__ == "__main__":
                     traceback.print_exc()
                     error = traceback.format_exc()
                     print(error)
-                    gr.Error(f"训练出错了: {error}")
-                    return f"训练出错了: {error}","", "", "", ""
+                    gr.Error(f"Training error: {error}")
+                    return f"Training error: {error}","", "", "", ""
 
                 # copy original files to avoid parameters changes issues
                 shutil.copy2(config_path,exp_path)
                 shutil.copy2(vocab_file,exp_path)
 
                 ft_xtts_checkpoint = os.path.join(exp_path, "best_model.pth")
-                print("训练完毕!")
+                print("Training finished!")
                 clear_gpu_cache()               
                 
                 msg=load_model(
@@ -318,11 +334,11 @@ if __name__ == "__main__":
                     config_path,
                     vocab_file
                 )
-                gr.Info("训练完毕，可以测试了")
-                return "训练完毕，可以测试了",config_path, vocab_file, ft_xtts_checkpoint, speaker_wav
+                gr.Info("Training finished, you can now test it")
+                return "Training finished, ready to test",config_path, vocab_file, ft_xtts_checkpoint, speaker_wav
         
             # 处理数据集
-            def preprocess_dataset(audio_path, language,  progress=gr.Progress(track_tqdm=True)):
+            def preprocess_dataset(audio_path, language,  progress=gr.Progress()):
                 clear_gpu_cache()
                 out_path = os.path.join(args['out_path'], dataset_name)
                 os.makedirs(out_path, exist_ok=True)
@@ -332,19 +348,19 @@ if __name__ == "__main__":
                 except:
                     traceback.print_exc()
                     error = traceback.format_exc()
-                    gr.Error(f"处理训练数据出错了! \n Error summary: {error}")
+                    gr.Error(f"Error processing training data! \n Error summary: {error}")
                     return "", "","",""
 
                 clear_gpu_cache()
 
                 # if audio total len is less than 2 minutes raise an error
                 if audio_total_size < 120:
-                    message = "素材总时长不得小于2分钟!"
+                    message = "Total material duration must not be less than 2 minutes!"
                     print(message)
                     gr.Error(message)
                     return "", "","",""
 
-                print("数据处理完毕，开始训练!")
+                print("Data processing complete, starting training!")
                 
                 traindata=""
                 evaldata=""
@@ -358,22 +374,22 @@ if __name__ == "__main__":
             # 复制到clone
             def move_to_clone(model_name,model_file,vocab,cfg,audio_file):
                 if not audio_file or not os.path.exists(audio_file):
-                    gr.Warning("必须填写参考音频")
-                    return "必须填写参考音频"
-                gr.Info('开始复制到clone自定义模型下，请耐心等待提示完成')
+                    gr.Warning("Reference audio must be provided")
+                    return "Reference audio must be provided"
+                gr.Info('Starting copy to custom models, please wait for completion...')
                 print(f'{model_name=}')
                 print(f'{model_file=}')
                 print(f'{vocab=}')
                 print(f'{cfg=}')
                 print(f'{audio_file=}')
-                model_dir=os.path.join(os.getcwd(),f'models/mymodels/{model_name}')
+                model_dir=os.path.join(os.getcwd(),f'tts/mymodels/{model_name}')
                 os.makedirs(model_dir,exist_ok=True)
                 shutil.copy2(model_file,os.path.join(model_dir,'model.pth'))
                 shutil.copy2(vocab,os.path.join(model_dir,'vocab.json'))
                 shutil.copy2(cfg,os.path.join(model_dir,'config.json'))
                 shutil.copy2(audio_file,os.path.join(model_dir,'base.wav'))
-                gr.Info('已复制到clone自定义模型目录下了，可以去使用咯')
-                return "已复制到clone自定义模型目录下了，可以去使用咯"
+                gr.Info('Copied to custom models directory, you can now use it!')
+                return "Copied to custom models directory!"
             
             move_btn.click(
                 fn=move_to_clone,
@@ -420,7 +436,7 @@ if __name__ == "__main__":
             
     threading.Thread(target=openweb,args=(args['port'],)).start()
     demo.launch(
-        share=True,
+        share=False,
         debug=False,
         server_port=args['port'],
         server_name="0.0.0.0"
