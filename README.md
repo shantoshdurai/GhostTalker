@@ -20,20 +20,19 @@
 
 ---
 
-## 🌑 The Resurrection (Fixes & Optimizations)
-This project is an optimized distribution of the original [jianchang512/clone-voice](https://github.com/jianchang512/clone-voice). **GhostTalker** was forged to solve the "impossible"—bringing heavy-duty AI voice training to consumer-grade hardware.
+---
 
-#### **🔥 Why this version is superior:**
-- ⚡ **CUDA 12.1 Lifecycle**: Fixed mismatched DLL errors (`cublas64_12.dll`) for RTX series cards.
-- 🧪 **VRAM Alchemy**: Implemented `float16` and compressed model defaults—optimized specifically for **4GB VRAM**.
-- 🛠️ **Pydantic Safety Fix**: Resolved the floating-point progress bar crash that rendered training impossible on new Pydantic versions.
-- 🏎️ **Lightning Inference**: Modified logic to use 10s reference windows, speeding up generation by **500%**.
-- 🌍 **Global Support**: Fixed `pypinyin` dependencies and set English-first UI defaults.
+> 🤖 **Neural Warning**: This README was "ghostwritten" by an AI agent. The code is 100% hardware-optimized, but the hype is 100% GPU-hallucinated.
 
 ---
 
-## 🌌 The Vision
-Why settle for generic AI voices when you can command an echo? GhostTalker isn't just a Text-to-Speech tool; it's a bridge between the physical and the digital.
+## ⚡ The Fixes (RTX 2050 Optimized)
+Originally from [jianchang512/clone-voice](https://github.com/jianchang512/clone-voice), resurrected to actually work:
+- 🛠️ **CUDA 12.1**: Fixed `cublas64_12.dll` errors for new NVIDIA cards.
+- 🧪 **VRAM Alchemy**: Runs on **4GB VRAM** via `float16` and compressed model hacks.
+- 🛡️ **No-Crash Training**: Patched the Pydantic floating-point bug.
+- 🏎️ **Instant Echo**: Forced 10s reference windows for faster cloning.
+- 🌍 **Global Logic**: English-first UI + `pypinyin` fix for stability.
 
 ---
 
