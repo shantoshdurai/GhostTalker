@@ -22,7 +22,7 @@
 
 ---
 
-> 🤖 **Neural Warning**: This README was "ghostwritten" by an AI agent. The code is 100% hardware-optimized, but the hype is 100% GPU-hallucinated.
+> 🤖 **Warning**: This README was "ghostwritten" by an AI. This is to enusre every tiny bit of this needs to be addressed in a way all could be possibly understand.
 
 ---
 
