@@ -11,9 +11,22 @@ echo.
 :: 1. Check if virtual environment exists
 if not exist "venv\Scripts\python.exe" (
     echo [!] ALERT: Virtual environment 'venv' missing.
-    echo [!] Recommendation: Run 'python -m venv venv' and install requirements.txt.
-    pause
-    exit /b
+    echo [+] Starting First-time Setup: Building Neural Engine (venv)...
+    python -m venv venv
+    if errorlevel 1 (
+        echo [ERR] Python not found in Path. Please install Python!
+        pause
+        exit /b
+    )
+    echo.
+    echo [+] Environment Created. Installing Pro Dependencies...
+    echo [+] This might take a few minutes (downloading Torch/CUDA/XTTS)...
+    call venv\Scripts\activate.bat
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+    echo.
+    echo [+] SETUP COMPLETE. Engine Stabilized.
+    echo.
 )
 
 :: 2. Launch Browser (safeguard)
