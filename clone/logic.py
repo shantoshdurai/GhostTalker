@@ -45,9 +45,15 @@ def updatecache():
 # tts 合成线程
 def ttsloop():
     try:
+        print(f"Loading XTTS v2 model on [{cfg.device}]...")
         tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(cfg.device)
-        print(langlist['lang14'])
-        cfg.tts_n=1
+        
+        # Performance: Force FP16 on CUDA for 4GB VRAM cards (RTX 2050/3050)
+        if cfg.device == "cuda":
+            tts.to(torch.float16)
+            
+        print("Success: [Text->Speech] Engine Active.")
+        cfg.tts_n = 1
     except aiohttp.client_exceptions.ClientOSError as e:
         print(f'{langlist["lang13"]}：{str(e)}')
         if not cfg.setorget_proxy():
@@ -80,8 +86,11 @@ def ttsloop():
 # s t s 线程
 def stsloop():
     try:
+        print(f"Loading FREEVC Engine on [{cfg.device}]...")
         tts = TTS(model_name='voice_conversion_models/multilingual/vctk/freevc24').to(cfg.device)
-        print("\n"+langlist['lang10']+"\n")
+        if cfg.device == "cuda":
+            tts.to(torch.float16)
+        print("Success: [Speech->Speech] Engine Active.")
     except aiohttp.client_exceptions.ClientOSError as e:
         cfg.sts_status=False
         print(f'{langlist["lang9"]}：{str(e)}')

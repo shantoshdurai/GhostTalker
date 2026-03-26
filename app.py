@@ -76,8 +76,7 @@ def index():
                            root_dir=ROOT_DIR.replace('\\', '/'))
 
 
-# 上传音频
-@app.route('/upload', methods=['POST'])
+# Upload Audio
 @app.route('/upload', methods=['POST'])
 def upload():
     try:
@@ -109,8 +108,8 @@ def upload():
             # 返回成功的响应
             return jsonify({'code': 0, 'msg': 'ok', "data": name})
         else:
-            # 返回错误的响应
-            return jsonify({'code': 1, 'msg': 'not wav'})
+            # Error response 
+            return jsonify({'code': 1, 'msg': 'unsupported format (only wav/mp3/flac)'})
     except Exception as e:
         app.logger.error(f'[upload]error: {e}')
         return jsonify({'code': 2, 'msg': 'error'})
