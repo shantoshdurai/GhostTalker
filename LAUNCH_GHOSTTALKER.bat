@@ -1,53 +1,32 @@
 @echo off
-TITLE 🎙️ GhostTalker Debug Launcher
-COLOR 0A
+:: STABLE PRO-LAUNCHER (BAREBONES)
 
-echo --------------------------------------------------
-echo      🎙️ GHOSTTALKER DEBUG LAUNCHER
-echo --------------------------------------------------
+echo 🎙️ GHOSTTALKER LAUNCHER (v2.0)
 echo.
 
-:: 1. Verify Python
-echo [+] Checking for Python...
-python --version
+:: 1. Is Python here?
+where python >nul 2>nul
 if errorlevel 1 (
-    echo [ERR] Python.exe not found. Please install Python 3.10+.
+    echo [ERR] Python NOT found. Install it first!
     pause
     exit /b
 )
 
-:: 2. Setup VENV + Install Requirements
-if not exist "venv\Scripts\python.exe" (
-    echo [!] ALERT: Virtual environment 'venv' missing. 
-    echo [+] Creating virtual environment...
+:: 2. Setup VENV
+if not exist venv (
+    echo [+] First-time Setup: Building Neural Engine...
     python -m venv venv
-    
-    echo [+] Activating environment...
-    call venv\Scripts\activate.bat
-    
-    echo [+] Installing dependencies (this takes a few minutes)...
-    echo.
-    python -m pip install --upgrade pip
-    pip install -r requirements.txt
-    if errorlevel 1 (
-        echo [ERR] Dependency installation failed! Check your internet connection.
-        pause
-        exit /b
-    )
-    echo.
-    echo [+] SETUP COMPLETE. All requirements installed.
-) else (
-    echo [+] Environment 'venv' detected.
-    call venv\Scripts\activate.bat
 )
 
-:: 3. Launch the Backend
-echo [+] Starting GhostTalker Engine (app.py)...
-echo.
-python app.py
+:: 3. Run
+echo [+] Summoning the Ghost...
+.\venv\Scripts\python.exe -m pip install -r requirements.txt
+.\venv\Scripts\python.exe app.py
 
+:: If it crashes, don't close the window!
 if errorlevel 1 (
-    echo [ERR] GhostTalker crashed or stopped unexpectedly.
+    echo.
+    echo [ERR] The engine stopped. Check the error above.
     pause
 )
 
