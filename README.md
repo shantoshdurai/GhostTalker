@@ -52,10 +52,13 @@ pip install torch torchaudio torchvision --index-url https://download.pytorch.or
 ```
 
 ### 3️⃣ Ignition
-| Mode | Command |
+The quickest way to start the engine is using the one-click launcher:
+- **Run**: `.\LAUNCH_GHOSTTALKER.bat`
+
+| Alternate Mode | Command |
 | :--- | :--- |
-| **Training Phase** | `.\runtrain.bat` |
-| **Generation Phase** | `python app.py` |
+| **Direct Flask Launch** | `python app.py` |
+| **Manual Training** | `.\runtrain.bat` |
 
 ---
 
