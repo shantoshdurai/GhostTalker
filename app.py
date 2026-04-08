@@ -47,6 +47,11 @@ DEFAULT_TTS_MODEL_CFG = [
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"[*] Starting GhostTalker on device: {device}")
+if device == "cpu":
+    print("[!] No CUDA GPU detected — running on CPU. Generation will take ~60 seconds per request.")
+else:
+    import torch
+    print(f"[*] GPU: {torch.cuda.get_device_name(0)}")
 
 # Preload ALL models at startup — nothing downloads during a request
 print("[*] Loading F5-TTS model...")
