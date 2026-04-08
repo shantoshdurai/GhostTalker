@@ -1,15 +1,26 @@
 import os
 import shutil
-import imageio_ffmpeg
+import subprocess
 
-# imageio-ffmpeg bundles ffmpeg but names it "ffmpeg-win64-vX.exe" on Windows.
-# Copy it as "ffmpeg.exe" so pydub subprocess calls can find it.
-_ffmpeg_src = imageio_ffmpeg.get_ffmpeg_exe()
-_ffmpeg_dir = os.path.dirname(_ffmpeg_src)
-_ffmpeg_exe = os.path.join(_ffmpeg_dir, "ffmpeg.exe")
-if not os.path.exists(_ffmpeg_exe):
-    shutil.copy(_ffmpeg_src, _ffmpeg_exe)
-os.environ["PATH"] = _ffmpeg_dir + os.pathsep + os.environ.get("PATH", "")
+# On Windows, imageio-ffmpeg bundles ffmpeg as "ffmpeg-win64-vX.exe".
+# Copy it as "ffmpeg.exe" so pydub can find it.
+# On Linux (HuggingFace Spaces), ffmpeg is installed via packages.txt — skip this.
+if os.name == "nt":
+    import imageio_ffmpeg
+    _ffmpeg_src = imageio_ffmpeg.get_ffmpeg_exe()
+    _ffmpeg_dir = os.path.dirname(_ffmpeg_src)
+    _ffmpeg_exe = os.path.join(_ffmpeg_dir, "ffmpeg.exe")
+    if not os.path.exists(_ffmpeg_exe):
+        shutil.copy(_ffmpeg_src, _ffmpeg_exe)
+    os.environ["PATH"] = _ffmpeg_dir + os.pathsep + os.environ.get("PATH", "")
+
+# ZeroGPU support for HuggingFace Spaces (no-op locally)
+try:
+    import spaces
+    HF_SPACES = True
+except ImportError:
+    spaces = None
+    HF_SPACES = False
 
 import torch
 import gradio as gr
@@ -105,6 +116,24 @@ def auto_transcribe(audio_path: str) -> str:
     return transcript
 
 
+def _run_inference(ref_audio_processed, ref_text_processed, gen_text):
+    model = get_f5tts()
+    vocoder = get_vocoder()
+    final_wave, final_sample_rate, _ = infer_process(
+        ref_audio_processed,
+        ref_text_processed,
+        gen_text,
+        model,
+        vocoder,
+        device=device,
+    )
+    return final_wave, final_sample_rate
+
+# Wrap with ZeroGPU decorator on HuggingFace Spaces, no-op locally
+if HF_SPACES:
+    _run_inference = spaces.GPU(duration=120)(_run_inference)
+
+
 def clone_voice(ref_audio, ref_text, gen_text, progress=gr.Progress()):
     if not ref_audio:
         raise gr.Error("Please upload or record a reference audio file.")
@@ -122,20 +151,10 @@ def clone_voice(ref_audio, ref_text, gen_text, progress=gr.Progress()):
         ref_text = auto_transcribe(ref_audio)
 
     progress(0.1, desc="Pre-processing audio...")
-    model = get_f5tts()
-    vocoder = get_vocoder()
-
     ref_audio_processed, ref_text_processed = preprocess_ref_audio_text(ref_audio, ref_text)
 
     progress(0.3, desc="Generating speech...")
-    final_wave, final_sample_rate, _ = infer_process(
-        ref_audio_processed,
-        ref_text_processed,
-        gen_text,
-        model,
-        vocoder,
-        device=device,
-    )
+    final_wave, final_sample_rate = _run_inference(ref_audio_processed, ref_text_processed, gen_text)
 
     progress(0.9, desc="Exporting result...")
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:

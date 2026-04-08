@@ -1,4 +1,5 @@
 --extra-index-url https://download.pytorch.org/whl/cu121
+spaces
 f5-tts
 gradio
 torch
