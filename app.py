@@ -48,28 +48,27 @@ DEFAULT_TTS_MODEL_CFG = [
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"[*] Starting GhostTalker on device: {device}")
 
-# Lazy-loaded models
-_vocoder = None
-_f5tts_model = None
+# Preload models at startup so first request doesn't time out
+print("[*] Loading F5-TTS model...")
+ckpt_path = str(cached_path(DEFAULT_TTS_MODEL_CFG[0]))
+vocab_path = str(cached_path(DEFAULT_TTS_MODEL_CFG[1]))
+model_cfg = json.loads(DEFAULT_TTS_MODEL_CFG[2])
+_f5tts_model = load_model(DiT, model_cfg, ckpt_path, vocab_file=vocab_path, device=device)
+
+print("[*] Loading Vocoder...")
+_vocoder = load_vocoder(device=device)
+
+print("[*] Models ready.")
+
+# ASR stays lazy — only loaded if user leaves transcript blank
 _asr_pipe = None
 
 
 def get_vocoder():
-    global _vocoder
-    if _vocoder is None:
-        print("[*] Loading Vocoder...")
-        _vocoder = load_vocoder(device=device)
     return _vocoder
 
 
 def get_f5tts():
-    global _f5tts_model
-    if _f5tts_model is None:
-        print("[*] Loading F5-TTS Model...")
-        ckpt_path = str(cached_path(DEFAULT_TTS_MODEL_CFG[0]))
-        vocab_path = str(cached_path(DEFAULT_TTS_MODEL_CFG[1]))
-        model_cfg = json.loads(DEFAULT_TTS_MODEL_CFG[2])
-        _f5tts_model = load_model(DiT, model_cfg, ckpt_path, vocab_file=vocab_path, device=device)
     return _f5tts_model
 
 
@@ -223,6 +222,7 @@ with gr.Blocks(title="GhostTalker") as demo:
     )
 
 if __name__ == "__main__":
+    demo.queue(max_size=5, default_concurrency_limit=1)
     demo.launch(
         show_error=True,
         share=True,
