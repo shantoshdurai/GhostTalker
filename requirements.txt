@@ -7,7 +7,7 @@ torchaudio
 soundfile
 numpy
 cached_path
-transformers
+transformers<5.0.0
 pydub
 matplotlib
 vocos
