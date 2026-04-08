@@ -1,23 +1,14 @@
-# Core Dependencies
-Flask==3.0.0
-python-dotenv==1.0.0
-waitress==3.0.0
-werkzeug==3.0.1
-requests==2.31.0
-aiohttp==3.9.1
-
-# AI & Media Processing
-torch==2.4.1
-torchaudio==2.4.1
-torchvision==0.19.1
-pydub==0.25.1
-soundfile==0.12.1
-coqui-tts==0.24.2
-faster-whisper==1.0.0
-
-# Utilities
+--extra-index-url https://download.pytorch.org/whl/cu121
+f5-tts
+gradio
+torch
+torchaudio
+soundfile
 numpy
-pandas
-tqdm
-fsspec
-huggingface-hub
+cached_path
+transformers
+pydub
+matplotlib
+vocos
+safetensors
+imageio-ffmpeg

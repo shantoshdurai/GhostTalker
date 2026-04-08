@@ -1,81 +1,29 @@
-<p align="center">
-  <img src="banner.png" width="800" alt="GhostTalker Banner">
-</p>
+# 👻 GhostTalker
 
-<h1 align="center">🎙️ GhostTalker: The Eternal Echo</h1>
+GhostTalker is a powerful, zero-shot voice cloning application based on the state-of-the-art **F5-TTS** engine. It allows you to clone any voice using just a 3-10 second audio sample and generate natural-sounding speech from text.
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/PyTorch-2.4.1-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white" alt="PyTorch">
-  <img src="https://img.shields.io/badge/CUDA-12.1-76B900?style=for-the-badge&logo=nvidia&logoColor=white" alt="CUDA">
-  <img src="https://img.shields.io/badge/Optimized-RTX_2050-purple?style=for-the-badge&logo=nvidia" alt="RTX 2050">
-</p>
+## ✨ Features
+- **Zero-Shot Cloning**: No training required. Just upload a sample.
+- **High Quality**: Powered by F5-TTS with ConvNeXt V2 and Flow Matching.
+- **Easy UI**: Simple Gradio web interface for uploading, generating, and playing back audio.
+- **Optimized for RTX**: Pre-configured to use CUDA 12.1 for NVIDIA GPUs (like the RTX 2050).
 
----
+## 🚀 How to Run
 
-<p align="center">
-  <b>"Memory is a ghost, and the voice is its heartbeat."</b><br>
-  <i>A high-fidelity, neuro-synaptic voice cloning engine designed to capture, refine, and resurrect the unique essence of human speech.</i>
-</p>
+### Prerequisites
+- **Python 3.10 or 3.11** installed.
+- **FFmpeg** installed on your system (required for audio processing).
+- **NVIDIA GPU** (optional but recommended for faster generation).
 
----
+### Quick Start
+1. Double-click `LAUNCH_GHOSTTALKER.bat`.
+2. Wait for the environment to be set up and dependencies to install.
+3. Once the local URL appears (e.g., `http://127.0.0.1:7860`), open it in your browser.
 
----
+## 🎙️ Usage Tips
+- **Sample Length**: Use clean audio snippets between 3 and 10 seconds.
+- **Reference Text**: If you provide the exact transcript of the reference audio, the cloning accuracy improves significantly.
+- **Noise**: Background noise in the reference audio will negatively impact the output quality.
 
-> 🤖 **Warning**: This README was "ghostwritten" by an AI. This is to enusre every tiny bit of this needs to be addressed in a way all could be possibly understand.
-
----
-
-## ⚡ The Fixes (RTX 2050 Optimized)
-Originally from [jianchang512/clone-voice](https://github.com/jianchang512/clone-voice), resurrected to actually work:
-- 🛠️ **CUDA 12.1**: Fixed `cublas64_12.dll` errors for new NVIDIA cards.
-- 🧪 **VRAM Alchemy**: Runs on **4GB VRAM** via `float16` and compressed model hacks.
-- 🛡️ **No-Crash Training**: Patched the Pydantic floating-point bug.
-- 🏎️ **Instant Echo**: Forced 10s reference windows for faster cloning.
-- 🌍 **Global Logic**: English-first UI + `pypinyin` fix for stability.
-
----
-
-## 🛠️ Dark Arts (Setup)
-
-### 1️⃣ Summon the Environment
-```bash
-python -m venv venv
-.\venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-### 2️⃣ The GPU Catalyst
-```bash
-# Force the high-performance CUDA 12.1 engine
-pip install torch torchaudio torchvision --index-url https://download.pytorch.org/whl/cu121 --force-reinstall
-```
-
-### 3️⃣ Ignition
-The quickest way to start the engine is using the one-click launcher:
-- **Run**: `.\LAUNCH_GHOSTTALKER.bat`
-
-| Alternate Mode | Command |
-| :--- | :--- |
-| **Direct Flask Launch** | `python app.py` |
-| **Manual Training** | `.\runtrain.bat` |
-
----
-
-## 🕸️ The Workflow
-1.  **Step 1 (The Capture)**: Upload your target audio. GhostTalker slices and transcribes the soul.
-2.  **Step 2 (The Ascension)**: Neural training begins. Optimized for 40-minute burn-in.
-3.  **Step 3 (The Echo)**: Real-time synthesis testing.
-4.  **Step 4 (The Integration)**: Merge the model into your live application.
-
----
-
-## ⚖️ Ethical Scroll
-GhostTalker is a powerful tool for creativity, accessibility, and preservation. **Use it with respect.** Do not use these echoes to deceive, harm, or impersonate without consent.
-
----
-
-<p align="center">
-  <i>Hand-crafted with passion and neural optimization.</i><br>
-  <b>Maintained by <a href="https://github.com/shantoshdurai">shantoshdurai</a></b>
-</p>
+## 📄 License
+This project uses the **F5-TTS** model which is licensed under CC-BY-NC. The code in this repository is provided for educational and research purposes.

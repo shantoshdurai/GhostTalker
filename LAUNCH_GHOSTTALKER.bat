@@ -1,33 +1,45 @@
 @echo off
-:: STABLE PRO-LAUNCHER (BAREBONES)
+setlocal
+title GhostTalker Launcher
 
-echo 🎙️ GHOSTTALKER LAUNCHER (v2.0)
-echo.
+:: Move to script directory
+cd /d %~dp0
 
-:: 1. Is Python here?
-where python >nul 2>nul
-if errorlevel 1 (
-    echo [ERR] Python NOT found. Install it first!
+echo ======================================================
+echo           GHOSTTALKER VOICE CLONING TOOL
+echo ======================================================
+
+:: Check for Python
+python --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [ERROR] Python not found! Please install Python 3.10+ and add it to PATH.
     pause
-    exit /b
+    exit /b 1
 )
 
-:: 2. Setup VENV
+:: Setup Virtual Environment
 if not exist venv (
-    echo [+] First-time Setup: Building Neural Engine...
+    echo [*] Creating virtual environment...
     python -m venv venv
 )
 
-:: 3. Run
-echo [+] Summoning the Ghost...
-.\venv\Scripts\python.exe -m pip install -r requirements.txt
-.\venv\Scripts\python.exe app.py
+echo [*] Activating venv...
+call venv\Scripts\activate
 
-:: If it crashes, don't close the window!
-if errorlevel 1 (
-    echo.
-    echo [ERR] The engine stopped. Check the error above.
-    pause
-)
+:: Update Pip
+echo [*] Updating pip...
+python -m pip install --upgrade pip
+
+:: Install PyTorch with CUDA 12.1
+echo [*] Ensuring Torch (CUDA 12.1) is installed...
+pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+:: Install other dependencies
+echo [*] Installing GhostTalker dependencies...
+pip install -r requirements.txt
+
+:: Launch the App
+echo [*] Starting the Web UI...
+python app.py
 
 pause
