@@ -173,11 +173,28 @@ with gr.Blocks(title="GhostTalker") as demo:
     with gr.Row():
         with gr.Column(scale=1):
             gr.Markdown("### 🎙️ Step 1: Reference Audio")
+            with gr.Tabs():
+                with gr.Tab("🎤 Record"):
+                    mic_input = gr.Audio(
+                        label="Record 3-10 seconds of the voice to clone",
+                        type="filepath",
+                        sources=["microphone"],
+                    )
+                with gr.Tab("📁 Upload"):
+                    upload_input = gr.Audio(
+                        label="Upload an audio file (WAV, MP3, etc.)",
+                        type="filepath",
+                        sources=["upload"],
+                    )
             audio_input = gr.Audio(
-                label="Upload or Record (3-10 seconds recommended)",
+                label="Active Reference Audio",
                 type="filepath",
-                sources=["upload", "microphone"]
+                visible=False,
             )
+            # Sync whichever tab is used into audio_input
+            mic_input.change(fn=lambda x: x, inputs=mic_input, outputs=audio_input)
+            upload_input.change(fn=lambda x: x, inputs=upload_input, outputs=audio_input)
+
             text_ref = gr.Textbox(
                 label="Reference Transcript (Optional — leave blank to auto-detect)",
                 placeholder="Type what is said in the clip, or leave blank for auto speech-to-text...",
