@@ -1,6 +1,5 @@
 import os
 import shutil
-import subprocess
 
 # On Windows, imageio-ffmpeg bundles ffmpeg as "ffmpeg-win64-vX.exe".
 # Copy it as "ffmpeg.exe" so pydub can find it.
@@ -24,7 +23,6 @@ except ImportError:
 
 import torch
 import gradio as gr
-import numpy as np
 import tempfile
 import json
 import soundfile as sf
@@ -64,12 +62,8 @@ print("[*] Loading Vocoder...")
 _vocoder = load_vocoder(device=device)
 
 print("[*] Loading Whisper ASR model...")
-from transformers import pipeline as hf_pipeline
-_asr_pipe = hf_pipeline(
-    "automatic-speech-recognition",
-    model="openai/whisper-base",
-    device=0 if device == "cuda" else -1,
-)
+import whisper as _whisper_pkg
+_whisper_model = _whisper_pkg.load_model("base", device=device)
 
 print("[*] All models ready.")
 
@@ -82,34 +76,24 @@ def get_f5tts():
     return _f5tts_model
 
 
-def get_asr():
-    return _asr_pipe
-
-
 def auto_transcribe(audio_path: str) -> str:
     """
-    Transcribe audio without hitting the torchcodec/ffmpeg_read bug in transformers 5.5.
-    Strategy:
-      1. Convert any format to 16kHz mono WAV using pydub (uses our bundled ffmpeg.exe).
-      2. Load the WAV as a numpy array with soundfile (no subprocess, no ffmpeg_read).
-      3. Pass the numpy array directly to Whisper pipeline (bypasses ffmpeg_read entirely).
+    Transcribe audio using openai-whisper directly.
+    openai-whisper has no torchcodec dependency and works on CPU-only environments.
+    pydub converts to 16kHz mono WAV first so whisper gets clean input.
     """
     print("[*] Auto-transcribing reference audio...")
 
-    # Step 1: Convert to 16kHz mono WAV via pydub
+    # Convert to 16kHz mono WAV via pydub (uses bundled ffmpeg)
     aseg = AudioSegment.from_file(audio_path)
     aseg = aseg.set_channels(1).set_frame_rate(16000)
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
         tmp_wav = f.name
     aseg.export(tmp_wav, format="wav")
 
-    # Step 2: Load as numpy array with soundfile
-    audio_array, sr = sf.read(tmp_wav)
+    result = _whisper_model.transcribe(tmp_wav)
     os.unlink(tmp_wav)
 
-    # Step 3: Transcribe via numpy input — no ffmpeg_read called
-    asr = get_asr()
-    result = asr({"array": audio_array.astype(np.float32), "sampling_rate": sr})
     transcript = result["text"].strip()
     print(f"[*] Transcribed: {transcript}")
     return transcript
