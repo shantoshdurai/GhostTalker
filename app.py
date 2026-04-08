@@ -227,14 +227,11 @@ with gr.Blocks(title="GhostTalker") as demo:
                         type="filepath",
                         sources=["upload"],
                     )
-            audio_input = gr.Audio(
-                label="Active Reference Audio",
-                type="filepath",
-                visible=False,
-            )
-            # Sync whichever tab is used into audio_input
-            mic_input.change(fn=lambda x: x, inputs=mic_input, outputs=audio_input)
-            upload_input.change(fn=lambda x: x, inputs=upload_input, outputs=audio_input)
+            # gr.State stores the filepath as-is without Gradio re-processing it.
+            # A hidden gr.Audio would move/re-encode the file and invalidate the path.
+            audio_state = gr.State(value=None)
+            mic_input.change(fn=lambda x: x, inputs=mic_input, outputs=audio_state)
+            upload_input.change(fn=lambda x: x, inputs=upload_input, outputs=audio_state)
 
             text_ref = gr.Textbox(
                 label="Reference Transcript (Optional — leave blank to auto-detect)",
@@ -270,7 +267,7 @@ with gr.Blocks(title="GhostTalker") as demo:
 
     btn_generate.click(
         fn=clone_voice,
-        inputs=[audio_input, text_ref, text_gen],
+        inputs=[audio_state, text_ref, text_gen],
         outputs=[audio_output, status_info]
     )
 
