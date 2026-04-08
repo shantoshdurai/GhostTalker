@@ -1,6 +1,5 @@
 ---
 title: GhostTalker
-emoji: 👻
 colorFrom: purple
 colorTo: indigo
 sdk: gradio
