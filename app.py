@@ -4,16 +4,21 @@ import shutil
 import types
 
 # ── torchcodec crash guard ────────────────────────────────────────────────────
-# f5-tts installs torchcodec as a dependency. On CPU-only containers (HF free
-# tier, Python 3.13, PyTorch 2.11) torchcodec tries to load libnppic.so.13
-# (a CUDA NPP library) at import time and crashes with OSError.
-# Fix: inject no-op stub modules into sys.modules BEFORE f5-tts is imported so
-# Python hands back the stub instead of executing torchcodec's native loader.
-# We never actually call torchcodec ourselves — pydub + soundfile handle audio.
+# f5-tts installs torchcodec which tries to dlopen libnppic.so.13 (CUDA NPP)
+# at import time — crashes on CPU-only HF Spaces (Python 3.13 / PyTorch 2.11).
+#
+# Fix: inject stub modules into sys.modules BEFORE f5-tts / datasets are
+# imported. Python returns the stub on `import torchcodec` without executing
+# the real native loader.
+#
+# Python 3.13 importlib.util.find_spec() raises ValueError when __spec__ is
+# None, so we must supply a proper ModuleSpec with loader=None.
+import importlib.machinery as _ilm
+
 def _stub(name: str):
     m = types.ModuleType(name)
-    m.__path__ = []          # make Python treat it as a package
-    m.__spec__ = None
+    m.__path__ = []          # mark as package so sub-imports don't fail
+    m.__spec__ = _ilm.ModuleSpec(name, loader=None, is_package=True)
     sys.modules[name] = m
     return m
 
@@ -26,7 +31,7 @@ for _tc_mod in [
     if _tc_mod not in sys.modules:
         _stub(_tc_mod)
 
-del _stub, _tc_mod
+del _stub, _tc_mod, _ilm
 # ─────────────────────────────────────────────────────────────────────────────
 
 # On Windows, imageio-ffmpeg bundles ffmpeg as "ffmpeg-win64-vX.exe".
