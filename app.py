@@ -119,12 +119,15 @@ def auto_transcribe(audio_path: str) -> str:
 def _run_inference(ref_audio_processed, ref_text_processed, gen_text):
     model = get_f5tts()
     vocoder = get_vocoder()
+    # nfe_step=16 on CPU for speed, 32 on GPU for quality
+    nfe = 32 if device == "cuda" else 16
     final_wave, final_sample_rate, _ = infer_process(
         ref_audio_processed,
         ref_text_processed,
         gen_text,
         model,
         vocoder,
+        nfe_step=nfe,
         device=device,
     )
     return final_wave, final_sample_rate
@@ -220,4 +223,8 @@ with gr.Blocks(title="GhostTalker") as demo:
     )
 
 if __name__ == "__main__":
-    demo.launch(show_error=True, theme=gr.themes.Default(primary_hue="purple", secondary_hue="indigo"))
+    demo.launch(
+        show_error=True,
+        share=True,
+        theme=gr.themes.Default(primary_hue="purple", secondary_hue="indigo"),
+    )
