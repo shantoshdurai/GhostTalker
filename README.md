@@ -1,16 +1,4 @@
----
-title: GhostTalker
-colorFrom: purple
-colorTo: indigo
-sdk: gradio
-sdk_version: 6.11.0
-app_file: app.py
-pinned: false
-license: cc-by-nc-4.0
-short_description: Zero-shot voice cloning powered by F5-TTS
----
-
-# 👻 GhostTalker
+#  GhostTalker
 
 **Live Demo → [huggingface.co/spaces/Santoshp123/GhostTalker](https://huggingface.co/spaces/Santoshp123/GhostTalker)**
 
