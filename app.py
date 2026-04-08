@@ -55,9 +55,11 @@ except ImportError:
     HF_SPACES = False
 
 import torch
+import torchaudio
 import gradio as gr
 import tempfile
 import json
+import numpy as np
 import soundfile as sf
 from pydub import AudioSegment
 from cached_path import cached_path
@@ -68,6 +70,23 @@ from f5_tts.infer.utils_infer import (
     infer_process,
     preprocess_ref_audio_text,
 )
+
+# ── torchaudio.load patch for CPU ─────────────────────────────────────────────
+# torchaudio >= 2.5 uses torchcodec as the default audio backend when it thinks
+# torchcodec is installed. Our stub satisfies the import check but has no real
+# AudioDecoder, so load() crashes. On CPU we replace torchaudio.load() with a
+# soundfile-based implementation that needs no native codec library at all.
+if not torch.cuda.is_available():
+    _orig_torchaudio_load = torchaudio.load
+    def _cpu_torchaudio_load(path, *args, **kwargs):
+        try:
+            return _orig_torchaudio_load(path, *args, **kwargs)
+        except Exception:
+            data, sr = sf.read(str(path), always_2d=True)
+            return torch.from_numpy(data.T.astype(np.float32)), sr
+    torchaudio.load = _cpu_torchaudio_load
+    print("[*] torchaudio.load patched to use soundfile backend (CPU mode)")
+# ─────────────────────────────────────────────────────────────────────────────
 
 # Constants & Configuration
 DEFAULT_TTS_MODEL_CFG = [
