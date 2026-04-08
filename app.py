@@ -48,7 +48,7 @@ DEFAULT_TTS_MODEL_CFG = [
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"[*] Starting GhostTalker on device: {device}")
 
-# Preload models at startup so first request doesn't time out
+# Preload ALL models at startup — nothing downloads during a request
 print("[*] Loading F5-TTS model...")
 ckpt_path = str(cached_path(DEFAULT_TTS_MODEL_CFG[0]))
 vocab_path = str(cached_path(DEFAULT_TTS_MODEL_CFG[1]))
@@ -58,10 +58,15 @@ _f5tts_model = load_model(DiT, model_cfg, ckpt_path, vocab_file=vocab_path, devi
 print("[*] Loading Vocoder...")
 _vocoder = load_vocoder(device=device)
 
-print("[*] Models ready.")
+print("[*] Loading Whisper ASR model...")
+from transformers import pipeline as hf_pipeline
+_asr_pipe = hf_pipeline(
+    "automatic-speech-recognition",
+    model="openai/whisper-base",
+    device=0 if device == "cuda" else -1,
+)
 
-# ASR stays lazy — only loaded if user leaves transcript blank
-_asr_pipe = None
+print("[*] All models ready.")
 
 
 def get_vocoder():
@@ -73,16 +78,6 @@ def get_f5tts():
 
 
 def get_asr():
-    """Lazy-load Whisper ASR pipeline. Uses numpy input to bypass torchcodec/ffmpeg_read."""
-    global _asr_pipe
-    if _asr_pipe is None:
-        from transformers import pipeline
-        print("[*] Loading Whisper ASR model...")
-        _asr_pipe = pipeline(
-            "automatic-speech-recognition",
-            model="openai/whisper-base",
-            device=0 if torch.cuda.is_available() else -1,
-        )
     return _asr_pipe
 
 
